@@ -1,7 +1,5 @@
 # YoYo-Web-App
-YoYo-Web-App
-
-# About YO-YO Test
+## About Yo-Yo Test
 The Yo-Yo test was invented by Dr. Jens Bangsbo, a Danish scientist and football coach, 
 in the 1990s. He tested it on footballers to improve their overall fitness levels, with a routine that was not just about running long distances. 
 Gradually, other sport started adopting Yo-Yo. For elite footballers, the benchmark score was set high at 21. 
