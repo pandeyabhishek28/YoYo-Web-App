@@ -1,0 +1,210 @@
+﻿@using YoYo_Web_App.BusinessLogic.Managers.Contracts;
+@using YoYo_Web_App.Domain.Models;
+@using YoYo_Web_App.Domain.EventsArgs;
+@implements IDisposable;
+
+<div class="top-container">
+    <div class="js-btn second-container">
+        @if (TestInfo.RunStatus == TestRunningStatus.Started)
+        {
+            <svg width="160px" height="160px" xmlns="http://www.w3.org/2000/svg">
+                <g>
+                    <circle id="circle" r="69.85699" cy="81" cx="81" stroke-width="15" stroke="#DE878F" fill="none" />
+                    <circle id="circle" class="circle_animation" r="69.85699" cy="81" cx="81"
+                            stroke-width="15" stroke="#DEDDDD" fill="none" style="stroke-dashoffset:-@Percent" />
+                </g>
+            </svg>
+            <div class="revert-all">
+                <p>Level @TestInfo.SpeedLevel</p>
+                <p>Shuttle @TestInfo.ShuttleNo</p>
+                <p>@TestInfo.Speed km/h</p>
+            </div>
+        }
+        else
+        {
+            <MatFAB Class="clear-background" OnClick="@StartRequested">
+                <MatIcon Class="large-icon">play_arrow</MatIcon>
+            </MatFAB>
+        }
+
+    </div>
+
+    <div class="bottom-status">
+        <div class="border-margin word-break-midfont">
+            Next
+            Shuttle
+            @(TestInfo.NextShuttle.ToString() + " s")
+        </div>
+        <div class="border-margin word-break-midfont">
+            Total
+            Time
+            @(TimeSpan.FromSeconds(TestInfo.TotalElapsedTime).ToString(@"hh\:mm") + " m")
+        </div>
+        <div class="word-break-midfont">
+            Total
+            Distance
+            @(TestInfo.TotalDistance.ToString("0.##") + " m")
+        </div>
+    </div>
+</div>
+<style>
+    svg {
+        -webkit-transform: rotate(-90deg);
+        transform: rotate(-90deg);
+    }
+
+    .circle_animation {
+        stroke-dasharray: 440;
+        stroke-dashoffset: 440;
+        transition: all 1s linear;
+    }
+
+    .top-container {
+        text-align: center;
+        justify-content: center;
+        align-content: center;
+        display: grid;
+    }
+
+    .second-container {
+        border-radius: 50%;
+        position: relative;
+        white-space: nowrap;
+        vertical-align: middle;
+        line-height: 10;
+        height: 158px;
+        width: 158px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        text-align: center;
+        text-transform: uppercase;
+        text-decoration: none;
+        transition: all 0.8s;
+        cursor: pointer;
+        -webkit-user-select: none;
+        transition-timing-function: cubic-bezier(.4,.08,0,.97);
+    }
+
+        .second-container:hover {
+            letter-spacing: 2px;
+        }
+
+        .second-container svg {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+    .circle {
+        stroke-dasharray: 301.59px 301.59px;
+        stroke-dashoffset: 301.59px;
+        transition: all 0.8s;
+        transition-timing-function: cubic-bezier(.4,.08,0,.97);
+    }
+
+    .second-container:hover .circle {
+        stroke-dashoffset: 0;
+    }
+
+    .clear-background {
+        box-shadow: none;
+        background: none;
+        background-color: none;
+        color: none;
+        position: relative;
+        width: 100px !important;
+        height: 100px !important;
+        line-height: 100px !important;
+    }
+
+    .large-icon {
+        font-size: 50px;
+        color: #018786;
+        position: relative;
+    }
+
+    .revert-all {
+        all: initial;
+        text-align: center;
+        position: absolute;
+        left: 55px;
+        top: 30px;
+    }
+
+    .bottom-status {
+        display: inline-flex;
+        height: 30%;
+    }
+
+    .border-margin {
+        border-right: solid;
+        border-right-width: 1px;
+        display: inline-table;
+        margin-right: 5px;
+        margin-left: 5px;
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+
+    .word-break-midfont {
+        white-space: pre-line;
+        font-size: 15px;
+    }
+</style>
+
+@code {
+
+    [Parameter]
+    public TestInfo TestInfo { get; set; }
+
+    [Parameter]
+    public Action UpdateState { get; set; }
+
+    [Parameter]
+    public ITestManager TestManager { get; set; }
+
+
+    public int Max { get; set; } = 440;
+
+    public int Percent { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        TestManager.OnStatusChange += OnChange;
+
+        await Task.FromResult(0);
+    }
+
+    public Task CalculateProgressPercent()
+    {
+        Percent = 0;
+
+        Percent = (int)(Max * TestInfo.ElapsedShuttleTime / TestInfo.LevelShuttleTime);
+
+        return Task.FromResult(0);
+    }
+
+    public void StartRequested(MouseEventArgs e)
+    {
+        UpdateState();
+    }
+
+    public async Task UpdateStates()
+    {
+        await CalculateProgressPercent();
+        await InvokeAsync(() =>
+        {
+            base.StateHasChanged();
+        });
+    }
+
+    public async void OnChange(object sender, TestStatusChangedEventArgs eventArgs)
+    {
+        await UpdateStates();
+    }
+
+    void IDisposable.Dispose()
+    {
+        TestManager.OnStatusChange -= OnChange;
+    }
+}

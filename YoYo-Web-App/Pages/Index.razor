@@ -1,0 +1,128 @@
+﻿@page "/"
+
+
+@using YoYo_Web_App.BusinessLogic.Managers.Contracts;
+@using YoYo_Web_App.Domain.Models;
+@inject ITestManager testManager
+
+@if (Test == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="full-height ">
+        <div class="first-section">
+            <TestProgressBar TestInfo="@Test.TestInfo" TestManager="testManager" UpdateState="@UpdateStates"></TestProgressBar>
+        </div>
+        <div class="second-section">
+            <br />
+            <h2>Track</h2>
+            <hr>
+            <table class="table">
+                <tbody>
+                    @foreach (var participant in Test.Participants)
+                    {
+                        <tr>
+                            <td>@participant.Memeber.FirstName</td>
+                            <td>@participant.Memeber.LastName</td>
+
+                            @if (participant.Started && (!participant.Stopped && !participant.Completed))
+                            {
+                                <td>
+                                    @if (!participant.Warned)
+                                    {
+                                        <MatFAB Class="warn" Label="Warn" Mini="true" @onclick="@(e => WarnParticipant(e, participant))">  </MatFAB>
+                                    }
+                                    else
+                                    {
+                                        <MatButton Disabled="true" Raised="true"> Warned </MatButton>
+                                    }
+                                    <MatFAB Class="stop" Label="Stop" Mini="true" @onclick="@(e=> StopParticipant(e,participant))">  </MatFAB>
+                                </td>
+                            }
+                            else if (participant.Stopped || participant.Completed)
+                            {
+                                <td>
+                                    <select class="form-control select-box">
+
+                                        @if (participant.Result != null)
+                                        {
+                                            if (participant.Result.FitnessRating != null)
+                                            {
+                                                <option value="@participant.Result.FitnessRating">@participant.Result.FitnessRating.SpeedLevel-@participant.Result.FitnessRating.ShuttleNo</option>
+                                            }
+                                            @foreach (var result in participant.Result.PossibleResults)
+                                            {
+                                                <option value="@result">@result.SpeedLevel-@result.ShuttleNo</option>
+                                            }
+                                        }
+                                    </select>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <hr>
+    </div>
+}
+
+<style>
+    .warn {
+        background-color: #018786;
+        height: 35px;
+    }
+
+    .stop {
+        /*color: #DE878F;*/
+        background-color: #DE878F;
+        height: 35px;
+    }
+
+    .full-height {
+        height: 90%;
+    }
+
+    .first-section {
+        height: 40%;
+    }
+
+    .second-section {
+        height: 50%;
+    }
+
+    .select-box {
+        min-width: 22%;
+        max-width: 40%;
+    }
+</style>
+
+@code {
+    private Test Test;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Test = await testManager.GetTest();
+    }
+
+    private async void WarnParticipant(MouseEventArgs e, TestParticipantInfo participantInfo)
+    {
+        participantInfo = await testManager.WarnParticipant(participantInfo);
+    }
+
+    private async void StopParticipant(MouseEventArgs e, TestParticipantInfo participantInfo)
+    {
+        participantInfo.Result = await testManager.StopParticipantAndGetResult(participantInfo);
+    }
+
+    private async void UpdateStates()
+    {
+        Test = await testManager.StartTest();
+        await InvokeAsync(() =>
+        {
+            base.StateHasChanged();
+        });
+    }
+}

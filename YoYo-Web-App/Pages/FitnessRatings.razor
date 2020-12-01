@@ -1,0 +1,57 @@
+﻿@page "/fitnessRatings"
+
+@using YoYo_Web_App.DAL.Services.Contracts
+@using YoYo_Web_App.DTOModels;
+@using YoYo_Web_App.Mappers;
+@inject IFitnessRatingService FitnessRatingService
+
+<h1>Fitness Ratings</h1>
+
+<p>The data is imported from "fitnessrating_Beeptest.json".</p>
+
+@if (fitnessRatings == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>AccumulatedShuttleDistance</th>
+                <th>SpeedLevel</th>
+                <th>ShuttleNo</th>
+                <th>Speed</th>
+                <th>LevelTime</th>
+                <th>CommulativeTime</th>
+                <th>StartTime</th>
+                <th>ApproxVo2Max</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var forecast in fitnessRatings)
+            {
+                <tr>
+                    <td>@forecast.AccumulatedShuttleDistance</td>
+                    <td>@forecast.SpeedLevel</td>
+                    <td>@forecast.ShuttleNo</td>
+                    <td>@forecast.Speed</td>
+                    <td>@forecast.LevelTime</td>
+                    <td>@forecast.CommulativeTime</td>
+                    <td>@forecast.StartTime</td>
+                    <td>@forecast.ApproxVo2Max</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<FitnessRatingDTO> fitnessRatings;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var ratings = await FitnessRatingService.GetAllFitnessRatingsAsync();
+        fitnessRatings = FitnessRatingMapper.Map(ratings);
+    }
+}
